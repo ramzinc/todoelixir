@@ -1,3 +1,42 @@
+defmodule ToDoServer do
+  def start do
+  Process.register(spawn(fn -> loop(ToDoList.new()) end), :todoserver)
+  end 
+
+  defp loop(todolist) do
+    new_todolist =
+    receive do
+    message -> process_message(todolist, message)
+    end
+    loop(new_todolist)
+  end
+
+  def add_entry(new_entry) do
+    send(:todoserver, {:add_entry, new_entry})
+  end
+
+  defp process_message(todo_list, {:add_entry, new_entry}) do
+    ToDoList.add_entry(todo_list,new_entry)
+  end
+
+
+  def entries(days) do
+    send(:todoserver, {:entries, self(), days})
+
+    receive do
+      {:todo_entries, entries} -> entries
+    after
+      5000 -> {:error, :timeout}
+    end
+    
+  end
+  
+  defp process_message(todo_list, {:entries, caller, days}) do
+    send(caller, {:todo_entries, ToDoList.entries(todo_list, days)})
+    todo_list
+    end 
+end
+
 defmodule ToDoList do
   defstruct auto_id: 1, entries: %{}
 
@@ -80,6 +119,26 @@ defmodule ToDoList.CsvImporter do
   end
     
   
+end
+
+defimpl String.Chars, for: ToDoList do
+	def to_string(_) do
+	"String representation of TodoList"			  
+ 	end
+end
+
+defimpl Collectable, for: ToDoList do
+  def into(original)do
+    {original, &into_callback/2}
+  end
+
+  defp into_callback(todo_list, {:cont, entry})do
+    ToDoList.add_entry(todo_list, entry)
+  end
+
+  defp into_callback(todo_list, :done), do: todo_list
+  defp into_callback(todo_list, :halt), do: :ok
+
 end
 
  
