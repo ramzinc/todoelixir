@@ -15,7 +15,6 @@ defmodule ToDo.DataBase do
 
   def save(key, value) do
     worker_key = choose_worker(key)
-
     GenServer.cast(__MODULE__, {:save, key, value, worker_key})
   end
 
@@ -51,6 +50,8 @@ defmodule ToDo.DataBase do
     # encoded_value = :erlang.term_to_binary(value)
     # File.write(@folder <> key, encoded_value)
     # {:noreply, state}
+    IO.puts("Ive reached here in the EXECUTION")
+    IO.inspect(Map.get(state.workers, worker_key))
     ToDo.DataBaseWorker.save(Map.get(state.workers, worker_key), key, value)
     {:noreply, state}
   end

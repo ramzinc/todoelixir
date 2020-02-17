@@ -16,6 +16,7 @@ defmodule ToDo.DataBaseWorker do
   @impl GenServer
   def init(dbfolder) do
     state = %{dbfolder: dbfolder, other_state: []}
+    IO.inspect(state)
     {:ok, state}
   end
 
@@ -36,7 +37,8 @@ defmodule ToDo.DataBaseWorker do
   @impl GenServer
   def handle_cast({:save, key, value}, state) do
     encoded_value = :erlang.term_to_binary(value)
-    File.write!(state.dbfolder <> key, encoded_value)
+    IO.inspect(state.dbfolder)
+    return = File.write(state.dbfolder <> key, encoded_value)
     {:noreply, state}
   end
 end

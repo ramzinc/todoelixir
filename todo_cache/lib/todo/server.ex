@@ -7,7 +7,7 @@ defmodule ToDo.Server do
 
   @impl GenServer
   def init(todoname) do
-    {:ok, {ToDo.DataBase.get(todoname)} || {todoname, ToDo.List.new()}}
+    {:ok, {todoname, ToDo.DataBase.get(todoname) || ToDo.List.new()}}
   end
 
   def get(server_id, date) do
@@ -19,27 +19,28 @@ defmodule ToDo.Server do
   end
 
   @impl GenServer
-  def handle_call({:add_entry, new_entry}, _, {todo_list_name, current_state}) do
-    {:noreply, ToDo.List.add_entry(current_state, new_entry)}
+  def handle_cast({:add_entry, new_entry}, {todo_listname, state}) do
+    new_list = ToDo.List.add_entry(state, new_entry)
+    ToDo.DataBase.save(todo_listname, new_list)
+
+    {:noreply, {todo_listname, new_list}}
+  end
+
+  # @impl GenServer
+  # def handle_call({:add_entry, new_entry}, _, {todo_list_name, current_state}) do
+  #   {:noreply, ToDo.List.add_entry(current_state, new_entry)}
+  # end
+
+  @impl GenServer
+  def handle_call({:entries, date}, _, {todo_listname, current_state}) do
+    {:reply, ToDo.List.entries(current_state, date), current_state}
   end
 
   @impl GenServer
-  def handle_call({:delete_entry, entry}, _, {todo_list_name, current_state}) do
+  def handle_call({:delete_entry, entry}, _, {todo_listname, current_state}) do
     {:reply, ToDo.List.delete_entry(current_state, entry),
      ToDo.List.delete_entry(current_state, entry)}
 
     {:reply, current_state, current_state}
-  end
-
-  @impl GenServer
-  def handle_cast({:add_entry, new_entry}, {todo_list_name, current_state}) do
-    new_list = ToDo.List.add_entry(current_state, new_entry)
-    ToDo.DataBase.save(todo_list_name, new_list)
-    {:noreply, {todo_list_name, new_list}}
-  end
-
-  @impl GenServer
-  def handle_call({:entries, date}, _, current_state) do
-    {:reply, ToDo.List.entries(current_state, date), current_state}
   end
 end
