@@ -7,12 +7,12 @@ defmodule ToDo.Cache do
     {:ok, %{}}
   end
 
-  def start() do
-    GenServer.start(__MODULE__, nil)
+  def start_link(_) do
+    GenServer.start_link(__MODULE__, nil, name: __MODULE__)
   end
 
-  def todo_server_process(cache_pid, todo_p_name) do
-    GenServer.call(cache_pid, {:todoprocess, todo_p_name})
+  def todo_server_process(todo_p_name) do
+    GenServer.call(__MODULE__, {:todoprocess, todo_p_name})
   end
 
   @impl GenServer
