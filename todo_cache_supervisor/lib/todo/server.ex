@@ -1,5 +1,6 @@
 defmodule ToDo.Server do
   use GenServer, restart: :temporary
+  @expiry_time :timer.seconds(10)
 
   def start_link(todoname) do
     IO.puts("I am starting the ToDo.Server")
@@ -8,7 +9,7 @@ defmodule ToDo.Server do
 
   @impl GenServer
   def init(todoname) do
-    {:ok, {todoname, ToDo.DataBase.get(todoname) || ToDo.List.new()}}
+    {:ok, {todoname, ToDo.DataBase.get(todoname) || ToDo.List.new()}, @expiry_time}
   end
 
   def via_tuple(name) do
@@ -28,7 +29,7 @@ defmodule ToDo.Server do
     new_list = ToDo.List.add_entry(state, new_entry)
     ToDo.DataBase.save(todo_listname, new_list)
 
-    {:noreply, {todo_listname, new_list}}
+    {:noreply, {todo_listname, new_list}, @expiry_time}
   end
 
   # @impl GenServer
@@ -38,7 +39,7 @@ defmodule ToDo.Server do
 
   @impl GenServer
   def handle_call({:entries, date}, _, {todo_listname, current_state}) do
-    {:reply, ToDo.List.entries(current_state, date), current_state}
+    {:reply, ToDo.List.entries(current_state, date), current_state, @expiry_time}
   end
 
   @impl GenServer
@@ -46,6 +47,6 @@ defmodule ToDo.Server do
     {:reply, ToDo.List.delete_entry(current_state, entry),
      ToDo.List.delete_entry(current_state, entry)}
 
-    {:reply, current_state, current_state}
+    {:reply, current_state, current_state, @expiry_time}
   end
 end
