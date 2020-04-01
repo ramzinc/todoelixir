@@ -139,4 +139,4 @@ defmodule ServerProcess do
   end
 end
 
-ToDo.List.CsvImporter.open_file("/home/zeus/experiments/elixir/elixir/todolist/todocsv.csv")
+ToDo.List.CsvImporter.open_file("/home/kabak/experiments/elixir/todolist/todocsv.csv")
