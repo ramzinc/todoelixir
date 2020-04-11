@@ -1,14 +1,14 @@
 defmodule ToDo.DataBaseWorker do
   use GenServer
 
-  def start_link({dbfolder, worker_id}) do
-    IO.puts("Start DBworker #{worker_id}")
-    GenServer.start_link(__MODULE__, dbfolder, name: via_tuple(worker_id))
+  def start_link(dbfolder) do
+    # IO.puts("Start DBworker #{self()}")
+    GenServer.start_link(__MODULE__, dbfolder)
   end
 
   def get(worker_id, key) do
     IO.puts("I am getting the #{key} in DBWorker")
-    GenServer.call(via_tuple(worker_id), {:get, key})
+    GenServer.call(worker_id, {:get, key})
   end
 
   def via_tuple(worker_id) do
@@ -16,7 +16,7 @@ defmodule ToDo.DataBaseWorker do
   end
 
   def save(worker_id, key, value) do
-    GenServer.cast(via_tuple(worker_id), {:save, key, value})
+    GenServer.cast(worker_id, {:save, key, value})
   end
 
   @impl GenServer

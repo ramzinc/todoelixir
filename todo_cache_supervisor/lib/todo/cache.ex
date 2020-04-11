@@ -1,12 +1,12 @@
 defmodule ToDo.Cache do
   # use GenServer
 
-  @impl GenServer
-  def init(_) do
-    IO.puts("I am starting the ToDo.Cache")
-    # ToDo.DataBase.start_link(nil)
-    {:ok, %{}}
-  end
+  # @impl GenServer
+  # def init(_) do
+  #   IO.puts("I am starting the ToDo.Cache as a dynamic supervisor")
+  #   # ToDo.DataBase.start_link(nil)
+  #   {:ok, %{}}
+  # end
 
   def child_spec(_) do
     %{

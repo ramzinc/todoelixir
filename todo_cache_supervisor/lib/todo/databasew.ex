@@ -1,30 +1,37 @@
 defmodule ToDo.DataBase do
-  @folder "./persistance/"
-  @poolsize 3
+  @folder "./persistance"
 
   def start_link() do
-    IO.puts("Iam Starting  the ToDo.DataBase")
-    File.mkdir_p(@folder)
-    children = Enum.map(1..@poolsize, &worker_spec/1)
-    Supervisor.start_link(children, strategy: :one_for_one)
+    IO.puts("Iam Starting  the ToDo.DataBase using start_link")
+
+    # children = Enum.map(1..@poolsize, &worker_spec/1)
+    # Supervisor.start_link(children, strategy: :one_for_one)
   end
 
   def child_spec(_) do
-    %{
-      id: __MODULE__,
-      start: {__MODULE__, :start_link, []},
-      type: :supervisor
-    }
+    File.mkdir_p(@folder)
+
+    :poolboy.child_spec(
+      __MODULE__,
+      [
+        name: {:local, __MODULE__},
+        worker_module: ToDo.DataBaseWorker,
+        size: 3
+      ],
+      @folder
+    )
   end
 
   def get(key) do
-    choose_worker(key)
-    |> ToDo.DataBaseWorker.get(key)
+    :poolboy.transaction(__MODULE__, fn worker_pid ->
+      ToDo.DataBaseWorker.get(worker_pid, key)
+    end)
   end
 
   def save(key, value) do
-    choose_worker(key)
-    |> ToDo.DataBaseWorker.save(key, value)
+    :poolboy.transaction(__MODULE__, fn worker_pid ->
+      ToDo.DataBaseWorker.save(worker_pid, key, value)
+    end)
   end
 
   # @impl GenServer
@@ -35,14 +42,14 @@ defmodule ToDo.DataBase do
   #   {:ok, state}
   # end
 
-  def worker_spec(worker_id) do
-    current_spec = {ToDo.DataBaseWorker, {@folder, worker_id}}
-    Supervisor.child_spec(current_spec, id: worker_id)
-  end
+  # def worker_spec(worker_id) do
+  #   current_spec = {ToDo.DataBaseWorker, {@folder, worker_id}}
+  #   Supervisor.child_spec(current_spec, id: worker_id)
+  # end
 
-  def choose_worker(key) do
-    worker_key = :erlang.phash2(key, 3) + 1
-  end
+  # def choose_worker(key) do
+  #   worker_key = :erlang.phash2(key, 3) + 1
+  # end
 
   # @impl GenServer
   # def handle_call({:get, key, worker_key}, _, state) do
