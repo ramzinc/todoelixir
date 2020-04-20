@@ -9,7 +9,7 @@ defmodule ToDo.System do
   end
 
   def init(_) do
-    Supervisor.init([ToDo.ProcessRegistry, ToDo.Cache, ToDo.DataBase, ToDo.Web],
+    Supervisor.init([ToDo.Cache, ToDo.DataBase, ToDo.Web],
       strategy: :one_for_one
     )
   end

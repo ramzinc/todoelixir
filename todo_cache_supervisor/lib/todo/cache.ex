@@ -27,10 +27,18 @@ defmodule ToDo.Cache do
 
   def todo_server_process(todo_p_name) do
     # GenServer.call(__MODULE__, {:todoprocess, todo_p_name})
+    lookup_server(todo_p_name) || new_todo(todo_p_name)
+  end
+
+  defp new_todo(todo_p_name) do
     case ToDo.Cache.start_child(todo_p_name) do
       {:ok, pid} -> pid
       {:error, {:already_started, pid}} -> pid
     end
+  end
+
+  defp lookup_server(todo) do
+    ToDo.Server.where_is(todo)
   end
 
   # @impl GenServer

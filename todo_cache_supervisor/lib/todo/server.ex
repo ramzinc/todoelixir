@@ -3,7 +3,7 @@ defmodule ToDo.Server do
 
   def start_link(todoname) do
     IO.puts("I am starting the ToDo.Server")
-    GenServer.start_link(ToDo.Server, todoname, name: via_tuple(todoname))
+    GenServer.start_link(ToDo.Server, todoname, name: global_name(todoname))
   end
 
   @impl GenServer
@@ -11,8 +11,8 @@ defmodule ToDo.Server do
     {:ok, {todoname, ToDo.DataBase.get(todoname) || ToDo.List.new()}}
   end
 
-  def via_tuple(name) do
-    ToDo.ProcessRegistry.via_tuple({__MODULE__, name})
+  def global_name(name) do
+    {:global, {__MODULE__, name}}
   end
 
   def get(server_id, date) do
@@ -21,6 +21,13 @@ defmodule ToDo.Server do
 
   def add_entry(server_id, entry) do
     GenServer.cast(server_id, {:add_entry, entry})
+  end
+
+  def where_is(todoname) do
+    case :global.whereis_name({__MODULE__, todoname}) do
+      :undefined -> nil
+      pid -> pid
+    end
   end
 
   @impl GenServer

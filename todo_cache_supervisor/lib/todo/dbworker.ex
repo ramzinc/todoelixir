@@ -16,7 +16,7 @@ defmodule ToDo.DataBaseWorker do
   end
 
   def save(worker_id, key, value) do
-    GenServer.cast(worker_id, {:save, key, value})
+    GenServer.call(worker_id, {:save, key, value})
   end
 
   @impl GenServer
@@ -41,10 +41,10 @@ defmodule ToDo.DataBaseWorker do
   end
 
   @impl GenServer
-  def handle_cast({:save, key, value}, state) do
+  def handle_call({:save, key, value}, _, state) do
     encoded_value = :erlang.term_to_binary(value)
     IO.inspect(state.dbfolder)
     return = File.write(state.dbfolder <> key, encoded_value)
-    {:noreply, state}
+    {:reply, value, state}
   end
 end

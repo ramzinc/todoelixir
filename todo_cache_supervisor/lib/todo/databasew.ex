@@ -9,7 +9,9 @@ defmodule ToDo.DataBase do
   end
 
   def child_spec(_) do
-    File.mkdir_p(@folder)
+    [nod, _host] = "#{node()}" |> String.split("@")
+    directory = @folder <> nod
+    File.mkdir_p(directory)
 
     :poolboy.child_spec(
       __MODULE__,
@@ -18,7 +20,7 @@ defmodule ToDo.DataBase do
         worker_module: ToDo.DataBaseWorker,
         size: 3
       ],
-      @folder
+      directory
     )
   end
 
@@ -29,6 +31,19 @@ defmodule ToDo.DataBase do
   end
 
   def save(key, value) do
+    {return_val, bad_nodes} =
+      :rpc.multicall(
+        __MODULE__,
+        :save_local,
+        [key, value],
+        :timer.seconds(5)
+      )
+
+    Enum.each(bad_nodes, fn x -> IO.puts("save failed on #{x}") end)
+    :ok
+  end
+
+  def save_local(key, value) do
     :poolboy.transaction(__MODULE__, fn worker_pid ->
       ToDo.DataBaseWorker.save(worker_pid, key, value)
     end)
